@@ -56,3 +56,12 @@ func (q *Queries) CreateTeamRecord(ctx context.Context, arg CreateTeamRecordPara
 	)
 	return err
 }
+
+const resetRecords = `-- name: ResetRecords :exec
+DELETE FROM records
+`
+
+func (q *Queries) ResetRecords(ctx context.Context) error {
+	_, err := q.db.Exec(ctx, resetRecords)
+	return err
+}

@@ -42,3 +42,12 @@ func (q *Queries) CreateNewGame(ctx context.Context, arg CreateNewGameParams) er
 	)
 	return err
 }
+
+const resetGames = `-- name: ResetGames :exec
+DELETE FROM games
+`
+
+func (q *Queries) ResetGames(ctx context.Context) error {
+	_, err := q.db.Exec(ctx, resetGames)
+	return err
+}

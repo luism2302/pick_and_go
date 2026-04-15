@@ -7,3 +7,6 @@ INSERT INTO games (gamePk, date_played, home_team_id, home_score, away_team_id, 
     $5,
     $6
 );
+
+-- name: ResetGames :exec
+DELETE FROM games;

@@ -1,6 +1,7 @@
 package mlb
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"pick_and_go/database/sqlc"
@@ -456,4 +457,15 @@ func timeToPgDate(time time.Time) pgtype.Date {
 		Valid: true,
 	}
 	return date
+}
+
+func (client *SportClient) ResetResults() error {
+	if err := client.Queries.ResetGames(context.Background()); err != nil {
+		return fmt.Errorf("Couldn't reset games table: %w", err)
+	}
+	if err := client.Queries.ResetRecords(context.Background()); err != nil {
+		return fmt.Errorf("Couldn't reset records table: %w", err)
+	}
+
+	return nil
 }

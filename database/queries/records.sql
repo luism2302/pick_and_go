@@ -13,3 +13,6 @@ INSERT INTO records(id, team_id, wins, losses, pct, streak, runs_scored, runs_ag
     $10,
     $11
 );
+
+-- name: ResetRecords :exec
+DELETE FROM records;
