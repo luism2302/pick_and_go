@@ -7,7 +7,7 @@ import (
 	"pick_and_go/database/sqlc"
 )
 
-func GetAllTeams(client *SportClient) error {
+func (client *SportClient) GetAllTeams() error {
 	endpoint := "/api/v1/teams?sportId=1"
 	url := buildURL(endpoint)
 

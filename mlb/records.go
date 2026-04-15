@@ -7,7 +7,7 @@ import (
 	"pick_and_go/database/sqlc"
 )
 
-func GetTeamRecords(client *SportClient) error {
+func (client *SportClient) GetTeamRecords() error {
 	endpoint := "/api/v1/standings?leagueId=103,104&season=2026"
 	url := buildURL(endpoint)
 

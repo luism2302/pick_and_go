@@ -7,7 +7,7 @@ import (
 	"pick_and_go/database/sqlc"
 )
 
-func GetAllDivisions(client *SportClient) error {
+func (client *SportClient) GetAllDivisions() error {
 	endpoint := "/api/v1/divisions"
 	url := fmt.Sprintf("%s%s", reqPrefix, endpoint)
 

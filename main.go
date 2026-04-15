@@ -28,7 +28,7 @@ func main() {
 
 	client := mlb.NewSportClient(conn)
 
-	if err := mlb.GetTeamRecords(client); err != nil {
+	if err := client.GetSeasonSchedule(); err != nil {
 		log.Fatal(err)
 	}
 

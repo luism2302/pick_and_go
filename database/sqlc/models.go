@@ -13,6 +13,15 @@ type Division struct {
 	Name string
 }
 
+type Game struct {
+	Gamepk     int32
+	DatePlayed pgtype.Date
+	HomeTeamID int32
+	HomeScore  int32
+	AwayTeamID int32
+	AwayScore  int32
+}
+
 type Record struct {
 	ID          pgtype.UUID
 	TeamID      int32
