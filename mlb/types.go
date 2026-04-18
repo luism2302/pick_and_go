@@ -143,5 +143,19 @@ func (client *SportClient) ResetResults() error {
 	if err := client.Queries.ResetRecords(context.Background()); err != nil {
 		return fmt.Errorf("Couldn't reset records table: %w", err)
 	}
+	if err := client.Queries.ResetInnings(context.Background()); err != nil {
+		return fmt.Errorf("Couldn't reset innings table: %w", err)
+	}
+	return nil
+}
+
+func (client *SportClient) UpdateResults() error {
+	if err := client.GetGameResults(); err != nil {
+		return err
+	}
+	time.Sleep(1 * time.Second)
+	if err := client.GetTeamRecords(); err != nil {
+		return err
+	}
 	return nil
 }

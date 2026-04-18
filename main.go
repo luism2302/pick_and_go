@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"pick_and_go/mlb"
-	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/joho/godotenv"
@@ -32,11 +31,7 @@ func main() {
 	if err := client.ResetResults(); err != nil {
 		log.Fatal(err)
 	}
-	if err := client.GetGameResults(); err != nil {
-		log.Fatal(err)
-	}
-	time.Sleep(2 * time.Second)
-	if err := client.GetTeamRecords(); err != nil {
+	if err := client.UpdateResults(); err != nil {
 		log.Fatal(err)
 	}
 }

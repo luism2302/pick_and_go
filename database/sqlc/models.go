@@ -22,6 +22,18 @@ type Game struct {
 	AwayScore  int32
 }
 
+type Inning struct {
+	ID         pgtype.UUID
+	Gamepk     int32
+	InningName string
+	HomeRuns   int32
+	HomeHits   int32
+	HomeErrors int32
+	AwayRuns   int32
+	AwayHits   int32
+	AwayErrors int32
+}
+
 type Record struct {
 	ID          pgtype.UUID
 	TeamID      int32
