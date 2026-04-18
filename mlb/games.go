@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"pick_and_go/database/sqlc"
-	"time"
 )
 
-func (client *SportClient) GetSeasonSchedule() error {
+func (client *SportClient) GetGameResults() error {
 	endpoint := "/api/v1/schedule?sportId=1&season=2026&gameType=R"
 	url := buildURL(endpoint)
 
@@ -24,14 +24,7 @@ func (client *SportClient) GetSeasonSchedule() error {
 	if err := decoder.Decode(&allGames); err != nil {
 		return fmt.Errorf("Couldn't decode JSON into games struct: %w", err)
 	}
-	type Game struct {
-		date       time.Time
-		gamePk     int
-		homeTeamID int
-		homeScore  int
-		awayTeamID int
-		awayScore  int
-	}
+	log.Print(allGames)
 	for _, date := range allGames.Dates {
 		for _, game := range date.Games {
 			if game.Status.DetailedState != "Final" {

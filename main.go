@@ -32,7 +32,7 @@ func main() {
 	if err := client.ResetResults(); err != nil {
 		log.Fatal(err)
 	}
-	if err := client.GetSeasonSchedule(); err != nil {
+	if err := client.GetGameResults(); err != nil {
 		log.Fatal(err)
 	}
 	time.Sleep(2 * time.Second)
