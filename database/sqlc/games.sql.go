@@ -43,6 +43,24 @@ func (q *Queries) CreateNewGame(ctx context.Context, arg CreateNewGameParams) er
 	return err
 }
 
+const getGameByGPK = `-- name: GetGameByGPK :one
+SELECT gamepk, date_played, home_team_id, home_score, away_team_id, away_score FROM games WHERE gamepk = $1
+`
+
+func (q *Queries) GetGameByGPK(ctx context.Context, gamepk int32) (Game, error) {
+	row := q.db.QueryRow(ctx, getGameByGPK, gamepk)
+	var i Game
+	err := row.Scan(
+		&i.Gamepk,
+		&i.DatePlayed,
+		&i.HomeTeamID,
+		&i.HomeScore,
+		&i.AwayTeamID,
+		&i.AwayScore,
+	)
+	return i, err
+}
+
 const resetGames = `-- name: ResetGames :exec
 DELETE FROM games
 `

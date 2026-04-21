@@ -2,7 +2,6 @@ package mlb
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"pick_and_go/database/sqlc"
 	"time"
@@ -10,20 +9,11 @@ import (
 
 func (client *SportClient) GetGameResults() error {
 	endpoint := "/api/v1/schedule?sportId=1&season=2026&gameType=R"
-	url := buildURL(endpoint)
-
-	res, err := client.Get(url)
-	if err != nil {
-		return fmt.Errorf("Request to URL: %s failed.", url)
-	}
-
-	defer res.Body.Close()
-	decoder := json.NewDecoder(res.Body)
 	var allGames AllGamesJSON
-
-	if err := decoder.Decode(&allGames); err != nil {
-		return fmt.Errorf("Couldn't decode JSON into games struct: %w", err)
+	if err := client.RequestAndDecode(endpoint, &allGames); err != nil {
+		return err
 	}
+
 	for _, date := range allGames.Dates {
 		for _, game := range date.Games {
 			if game.Status.DetailedState != "Final" {
@@ -50,18 +40,10 @@ func (client *SportClient) GetGameResults() error {
 
 func (client *SportClient) GetLineScore(gamePk int) error {
 	endpoint := fmt.Sprintf("/api/v1/game/%d/linescore", gamePk)
-	url := buildURL(endpoint)
-
-	res, err := client.Get(url)
-	if err != nil {
-		return fmt.Errorf("Request to URL: %s failed.", url)
-	}
-	defer res.Body.Close()
-	decoder := json.NewDecoder(res.Body)
-
 	var lineScore LineScoreJSON
-	if err := decoder.Decode(&lineScore); err != nil {
-		return fmt.Errorf("Couldn't decode JSON into linescore struct: %w", err)
+
+	if err := client.RequestAndDecode(endpoint, &lineScore); err != nil {
+		return err
 	}
 
 	params := sqlc.CreateNewInningParams{

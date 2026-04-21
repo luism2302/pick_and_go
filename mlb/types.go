@@ -2,6 +2,7 @@ package mlb
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"pick_and_go/database/sqlc"
@@ -136,6 +137,74 @@ func timeToPgDate(time time.Time) pgtype.Date {
 	return date
 }
 
+type AllPlayersJSON struct {
+	People []Player
+}
+
+type Player struct {
+	ID          int    `json:"id"`
+	FirstName   string `json:"firstName"`
+	LastName    string `json:"lastName"`
+	CurrentAge  int    `json:"currentAge"`
+	Active      bool   `json:"active"`
+	CurrentTeam struct {
+		ID int `json:"id"`
+	} `json:"currentTeam"`
+	PrimaryPosition struct {
+		Abbreviation string `json:"abbreviation"`
+	} `json:"primaryPosition"`
+	BatSide struct {
+		Code string `json:"code"`
+	} `json:"batSide"`
+	PitchHand struct {
+		Code string `json:"code"`
+	} `json:"pitchHand"`
+}
+
+type PitchingStatsJSON struct {
+	Stats []struct {
+		Group struct {
+			DisplayName string `json:"displayName"`
+		} `json:"group"`
+		Splits []PitchingSplit `json:"splits"`
+	} `json:"stats"`
+}
+
+type PitchingSplit struct {
+	Season string `json:"season"`
+	Game   struct {
+		GamePk int `json:"gamePk"`
+	} `json:"game"`
+	Team struct {
+		ID   int    `json:"id"`
+		Name string `json:"name"`
+	} `json:"team"`
+	Stat PitchingStat `json:"stat"`
+}
+
+type PitchingStat struct {
+	GamesPlayed        int    `json:"gamesPlayed"`
+	GamesStarted       int    `json:"gamesStarted"`
+	InningsPitched     string `json:"inningsPitched"`
+	Wins               int    `json:"wins"`
+	Losses             int    `json:"losses"`
+	Saves              int    `json:"saves"`
+	Holds              int    `json:"holds"`
+	BlownSaves         int    `json:"blownSaves"`
+	Era                string `json:"era"`
+	Whip               string `json:"whip"`
+	Strikeouts         int    `json:"strikeouts"`
+	Walks              int    `json:"baseOnBalls"`
+	Hits               int    `json:"hits"`
+	HomeRuns           int    `json:"homeRuns"`
+	EarnedRuns         int    `json:"earnedRuns"`
+	HitBatsmen         int    `json:"hitBatsmen"`
+	StrikeoutsPer9     string `json:"strikeoutsPer9Inn"`
+	WalksPer9          string `json:"walksPer9Inn"`
+	HitsPer9           string `json:"hitsPer9Inn"`
+	StrikeoutWalkRatio string `json:"strikeoutWalkRatio"`
+}
+
 func (client *SportClient) ResetResults() error {
 	if err := client.Queries.ResetGames(context.Background()); err != nil {
 		return fmt.Errorf("Couldn't reset games table: %w", err)
@@ -145,6 +214,12 @@ func (client *SportClient) ResetResults() error {
 	}
 	if err := client.Queries.ResetInnings(context.Background()); err != nil {
 		return fmt.Errorf("Couldn't reset innings table: %w", err)
+	}
+	if err := client.Queries.ResetPlayers(context.Background()); err != nil {
+		return fmt.Errorf("Couldn't reset players table: %w", err)
+	}
+	if err := client.Queries.ResetPitching(context.Background()); err != nil {
+		return fmt.Errorf("Couldn't reset pitching table: %w", err)
 	}
 	return nil
 }
@@ -156,6 +231,25 @@ func (client *SportClient) UpdateResults() error {
 	time.Sleep(1 * time.Second)
 	if err := client.GetTeamRecords(); err != nil {
 		return err
+	}
+	time.Sleep(1 * time.Second)
+	if err := client.GetAllPlayers(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (client *SportClient) RequestAndDecode(endpoint string, target any) error {
+	url := buildURL(endpoint)
+	res, err := client.Get(url)
+	if err != nil {
+		return fmt.Errorf("Request to URL: %s failed.", url)
+	}
+	defer res.Body.Close()
+	decoder := json.NewDecoder(res.Body)
+
+	if err := decoder.Decode(target); err != nil {
+		return fmt.Errorf("Couldn't decode JSON into %T struct: %w", target, err)
 	}
 	return nil
 }

@@ -8,5 +8,8 @@ INSERT INTO games (gamePk, date_played, home_team_id, home_score, away_team_id, 
     $6
 );
 
+-- name: GetGameByGPK :one
+SELECT * FROM games WHERE gamepk = $1;
+
 -- name: ResetGames :exec
 DELETE FROM games;

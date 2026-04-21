@@ -34,6 +34,40 @@ type Inning struct {
 	AwayErrors int32
 }
 
+type Pitching struct {
+	ID                 pgtype.UUID
+	PlayerID           int32
+	Gamepk             int32
+	Era                string
+	Whip               string
+	InningsPitched     string
+	Strikeouts         int32
+	Walks              int32
+	HomeRuns           int32
+	EarnedRuns         int32
+	Hits               int32
+	Wins               int32
+	Losses             int32
+	GamesStarted       int32
+	Saves              int32
+	BlownSaves         int32
+	StrikeoutsPer9     string
+	WalksPer9          string
+	StrikeoutWalkRatio string
+}
+
+type Player struct {
+	ID              int32
+	FirstName       string
+	LastName        string
+	Age             int32
+	IsActive        bool
+	TeamID          int32
+	PrimaryPosition string
+	Batside         string
+	Pitchhand       string
+}
+
 type Record struct {
 	ID          pgtype.UUID
 	TeamID      int32

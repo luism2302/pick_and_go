@@ -2,26 +2,15 @@ package mlb
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"pick_and_go/database/sqlc"
 )
 
 func (client *SportClient) GetAllDivisions() error {
 	endpoint := "/api/v1/divisions"
-	url := fmt.Sprintf("%s%s", reqPrefix, endpoint)
-
-	res, err := client.Get(url)
-	if err != nil {
-		return fmt.Errorf("Request to URL: %s failed.", url)
-	}
-
-	defer res.Body.Close()
-	decoder := json.NewDecoder(res.Body)
 	var allDivisions AllDivisionsJSON
-
-	if err := decoder.Decode(&allDivisions); err != nil {
-		return fmt.Errorf("Couldn't decode JSON into divisions struct")
+	if err := client.RequestAndDecode(endpoint, &allDivisions); err != nil {
+		return err
 	}
 
 	for _, division := range allDivisions.Divisions {

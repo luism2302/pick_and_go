@@ -34,4 +34,5 @@ func main() {
 	if err := client.UpdateResults(); err != nil {
 		log.Fatal(err)
 	}
+
 }

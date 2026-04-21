@@ -2,27 +2,16 @@ package mlb
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"pick_and_go/database/sqlc"
 )
 
 func (client *SportClient) GetTeamRecords() error {
 	endpoint := "/api/v1/standings?leagueId=103,104&season=2026"
-	url := buildURL(endpoint)
-
-	res, err := client.Get(url)
-	if err != nil {
-		return fmt.Errorf("Request to URL: %s failed", url)
-	}
-
-	defer res.Body.Close()
-	decoder := json.NewDecoder(res.Body)
-
 	var records TeamRecordsJSON
 
-	if err := decoder.Decode(&records); err != nil {
-		return fmt.Errorf("Couldn't decode JSON into records struct")
+	if err := client.RequestAndDecode(endpoint, &records); err != nil {
+		return err
 	}
 
 	for _, register := range records.Records {
