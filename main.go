@@ -26,13 +26,23 @@ func main() {
 	}
 	defer conn.Close(context.Background())
 
-	client := mlb.NewSportClient(conn)
+	trx, err := conn.Begin(context.Background())
+	if err != nil {
+		log.Fatalf("Couldn't begin the transaction: %s", err)
+	}
+	defer trx.Rollback(context.Background())
+
+	client := mlb.NewSportClient(trx)
 
 	if err := client.ResetResults(); err != nil {
 		log.Fatal(err)
 	}
 	if err := client.UpdateResults(); err != nil {
 		log.Fatal(err)
+	}
+
+	if err := trx.Commit(context.Background()); err != nil {
+		log.Fatalf("Couldn't commit transaction: %s", err)
 	}
 
 }

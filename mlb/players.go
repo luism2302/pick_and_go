@@ -3,7 +3,6 @@ package mlb
 import (
 	"context"
 	"fmt"
-	"log"
 	"pick_and_go/database/sqlc"
 	"time"
 )
@@ -33,6 +32,9 @@ func (client *SportClient) GetAllPlayers() error {
 		if err := client.GetPitchingStats(int32(player.ID)); err != nil {
 			return err
 		}
+		if err := client.GetBattingStats(int32(player.ID)); err != nil {
+			return err
+		}
 		time.Sleep(200 * time.Millisecond)
 	}
 	return nil
@@ -46,10 +48,7 @@ func (client *SportClient) GetPitchingStats(playerID int32) error {
 	}
 	for _, data := range pitchingStats.Stats {
 		for _, game := range data.Splits {
-			log.Printf("Looking up game_pk: %d", game.Game.GamePk)
-			_, err := client.Queries.GetGameByGPK(context.Background(), int32(game.Game.GamePk))
-			if err != nil {
-				log.Printf("Game %d not found: %v", game.Game.GamePk, err)
+			if _, ok := client.GamesSeen[game.Game.GamePk]; !ok {
 				continue
 			}
 			params := sqlc.CreatePitchingEntryParams{
@@ -73,6 +72,48 @@ func (client *SportClient) GetPitchingStats(playerID int32) error {
 				StrikeoutWalkRatio: game.Stat.StrikeoutWalkRatio,
 			}
 			if err := client.Queries.CreatePitchingEntry(context.Background(), params); err != nil {
+				return fmt.Errorf("Couldn't insert values into pitching table: %w", err)
+			}
+		}
+	}
+	return nil
+}
+
+func (client *SportClient) GetBattingStats(playerID int32) error {
+	endpoint := fmt.Sprintf("/api/v1/people/%d/stats?stats=gameLog&group=hitting&season=2026", playerID)
+	var battingStats BattingStatsJSON
+	if err := client.RequestAndDecode(endpoint, &battingStats); err != nil {
+		return err
+	}
+	for _, data := range battingStats.Stats {
+		for _, game := range data.Splits {
+			if _, ok := client.GamesSeen[game.Game.GamePk]; !ok {
+				continue
+			}
+			params := sqlc.CreateBattingEntryParams{
+				PlayerID:       playerID,
+				Gamepk:         int32(game.Game.GamePk),
+				AtBats:         int32(game.Stat.AtBats),
+				Runs:           int32(game.Stat.Runs),
+				Hits:           int32(game.Stat.Hits),
+				Doubles:        int32(game.Stat.Doubles),
+				Triples:        int32(game.Stat.Triples),
+				HomeRuns:       int32(game.Stat.HomeRuns),
+				Rbi:            int32(game.Stat.RBI),
+				StolenBases:    int32(game.Stat.StolenBases),
+				CaughtStealing: int32(game.Stat.CaughtStealing),
+				Walks:          int32(game.Stat.Walks),
+				Strikeouts:     int32(game.Stat.Strikeouts),
+				HitByPitch:     int32(game.Stat.HitByPitch),
+				Avg:            game.Stat.Avg,
+				Obp:            game.Stat.OBP,
+				Slugging:       game.Stat.Slugging,
+				Ops:            game.Stat.OPS,
+				LeftOnBase:     int32(game.Stat.LeftOnBase),
+				SacBunts:       int32(game.Stat.SacBunts),
+				SacFlies:       int32(game.Stat.SacFlies),
+			}
+			if err := client.Queries.CreateBattingEntry(context.Background(), params); err != nil {
 				return fmt.Errorf("Couldn't insert values into pitching table: %w", err)
 			}
 		}

@@ -17,12 +17,14 @@ const (
 )
 
 type SportClient struct {
-	http.Client
-	Queries *sqlc.Queries
+	Client    *http.Client
+	Queries   *sqlc.Queries
+	GamesSeen map[int]bool
 }
 
 func NewSportClient(db sqlc.DBTX) *SportClient {
-	return &SportClient{Queries: sqlc.New(db)}
+	client := &http.Client{Timeout: 30 * time.Second}
+	return &SportClient{Client: client, Queries: sqlc.New(db), GamesSeen: make(map[int]bool)}
 }
 
 func buildURL(apiEndpoint string) string {
@@ -175,10 +177,6 @@ type PitchingSplit struct {
 	Game   struct {
 		GamePk int `json:"gamePk"`
 	} `json:"game"`
-	Team struct {
-		ID   int    `json:"id"`
-		Name string `json:"name"`
-	} `json:"team"`
 	Stat PitchingStat `json:"stat"`
 }
 
@@ -205,6 +203,44 @@ type PitchingStat struct {
 	StrikeoutWalkRatio string `json:"strikeoutWalkRatio"`
 }
 
+type BattingStatsJSON struct {
+	Stats []struct {
+		Group struct {
+			DisplayName string `json:"displayName"` // "hitting"
+		} `json:"group"`
+		Splits []BattingSplit `json:"splits"`
+	} `json:"stats"`
+}
+
+type BattingSplit struct {
+	Game struct {
+		GamePk int `json:"gamePk"`
+	} `json:"game"`
+	Stat BattingStat `json:"stat"`
+}
+
+type BattingStat struct {
+	AtBats         int    `json:"atBats"`
+	Runs           int    `json:"runs"`
+	Hits           int    `json:"hits"`
+	Doubles        int    `json:"doubles"`
+	Triples        int    `json:"triples"`
+	HomeRuns       int    `json:"homeRuns"`
+	RBI            int    `json:"rbi"`
+	StolenBases    int    `json:"stolenBases"`
+	CaughtStealing int    `json:"caughtStealing"`
+	Walks          int    `json:"baseOnBalls"`
+	Strikeouts     int    `json:"strikeOuts"`
+	HitByPitch     int    `json:"hitByPitch"`
+	Avg            string `json:"avg"`
+	OBP            string `json:"obp"`
+	Slugging       string `json:"slg"`
+	OPS            string `json:"ops"`
+	LeftOnBase     int    `json:"leftOnBase"`
+	SacBunts       int    `json:"sacBunts"`
+	SacFlies       int    `json:"sacFlies"`
+}
+
 func (client *SportClient) ResetResults() error {
 	if err := client.Queries.ResetGames(context.Background()); err != nil {
 		return fmt.Errorf("Couldn't reset games table: %w", err)
@@ -220,6 +256,9 @@ func (client *SportClient) ResetResults() error {
 	}
 	if err := client.Queries.ResetPitching(context.Background()); err != nil {
 		return fmt.Errorf("Couldn't reset pitching table: %w", err)
+	}
+	if err := client.Queries.ResetBatting(context.Background()); err != nil {
+		return fmt.Errorf("Couldn't reset batting table: %w", err)
 	}
 	return nil
 }
@@ -241,15 +280,23 @@ func (client *SportClient) UpdateResults() error {
 
 func (client *SportClient) RequestAndDecode(endpoint string, target any) error {
 	url := buildURL(endpoint)
-	res, err := client.Get(url)
-	if err != nil {
-		return fmt.Errorf("Request to URL: %s failed.", url)
-	}
-	defer res.Body.Close()
-	decoder := json.NewDecoder(res.Body)
 
-	if err := decoder.Decode(target); err != nil {
-		return fmt.Errorf("Couldn't decode JSON into %T struct: %w", target, err)
+	const maxAttempts = 4
+	for attempt := range maxAttempts {
+		res, err := client.Client.Get(url)
+		if err == nil {
+			defer res.Body.Close()
+			if err := json.NewDecoder(res.Body).Decode(target); err != nil {
+				return fmt.Errorf("couldn't decode JSON into %T: %w", target, err)
+			}
+			return nil
+		}
+
+		if attempt == maxAttempts-1 {
+			return fmt.Errorf("Request to %s failed after %d attempts: %w", url, maxAttempts, err)
+		}
+		wait := time.Duration(1<<attempt) * time.Second // 1s, 2s, 4s
+		time.Sleep(wait)
 	}
 	return nil
 }

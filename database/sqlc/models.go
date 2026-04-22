@@ -8,6 +8,31 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type Batting struct {
+	ID             pgtype.UUID
+	PlayerID       int32
+	Gamepk         int32
+	AtBats         int32
+	Runs           int32
+	Hits           int32
+	Doubles        int32
+	Triples        int32
+	HomeRuns       int32
+	Rbi            int32
+	StolenBases    int32
+	CaughtStealing int32
+	Walks          int32
+	Strikeouts     int32
+	HitByPitch     int32
+	Avg            string
+	Obp            string
+	Slugging       string
+	Ops            string
+	LeftOnBase     int32
+	SacBunts       int32
+	SacFlies       int32
+}
+
 type Division struct {
 	ID   int32
 	Name string

@@ -19,6 +19,9 @@ func (client *SportClient) GetGameResults() error {
 			if game.Status.DetailedState != "Final" {
 				continue
 			}
+
+			client.GamesSeen[game.GamePk] = true
+
 			params := sqlc.CreateNewGameParams{
 				DatePlayed: timeToPgDate(game.GameDate),
 				Gamepk:     int32(game.GamePk),
