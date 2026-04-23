@@ -25,3 +25,12 @@ func (q *Queries) CreateDivision(ctx context.Context, arg CreateDivisionParams) 
 	_, err := q.db.Exec(ctx, createDivision, arg.ID, arg.Name)
 	return err
 }
+
+const resetDivisions = `-- name: ResetDivisions :exec
+DELETE FROM divisions
+`
+
+func (q *Queries) ResetDivisions(ctx context.Context) error {
+	_, err := q.db.Exec(ctx, resetDivisions)
+	return err
+}

@@ -114,7 +114,7 @@ func (client *SportClient) GetBattingStats(playerID int32) error {
 				SacFlies:       int32(game.Stat.SacFlies),
 			}
 			if err := client.Queries.CreateBattingEntry(context.Background(), params); err != nil {
-				return fmt.Errorf("Couldn't insert values into pitching table: %w", err)
+				return fmt.Errorf("Couldn't insert values into batting table: %w", err)
 			}
 		}
 	}

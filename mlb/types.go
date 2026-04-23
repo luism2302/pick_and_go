@@ -242,6 +242,12 @@ type BattingStat struct {
 }
 
 func (client *SportClient) ResetResults() error {
+	if err := client.Queries.ResetDivisions(context.Background()); err != nil {
+		return fmt.Errorf("Couldn't reset divisions table: %w", err)
+	}
+	if err := client.Queries.ResetTeams(context.Background()); err != nil {
+		return fmt.Errorf("Couldn't reset teams table: %w", err)
+	}
 	if err := client.Queries.ResetGames(context.Background()); err != nil {
 		return fmt.Errorf("Couldn't reset games table: %w", err)
 	}
@@ -264,6 +270,14 @@ func (client *SportClient) ResetResults() error {
 }
 
 func (client *SportClient) UpdateResults() error {
+	if err := client.GetAllDivisions(); err != nil {
+		return err
+	}
+	time.Sleep(1 * time.Second)
+	if err := client.GetAllTeams(); err != nil {
+		return err
+	}
+	time.Sleep(1 * time.Second)
 	if err := client.GetGameResults(); err != nil {
 		return err
 	}

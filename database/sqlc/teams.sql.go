@@ -34,3 +34,12 @@ func (q *Queries) CreateTeam(ctx context.Context, arg CreateTeamParams) error {
 	)
 	return err
 }
+
+const resetTeams = `-- name: ResetTeams :exec
+DELETE FROM teams
+`
+
+func (q *Queries) ResetTeams(ctx context.Context) error {
+	_, err := q.db.Exec(ctx, resetTeams)
+	return err
+}
